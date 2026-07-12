@@ -1,0 +1,35 @@
+import { create } from "zustand";
+import { persist, createJSONStorage } from "zustand/middleware";
+import { configPadrao, type Config, type Paleta, type IntensidadeNotificacao } from "@/types";
+import { STORAGE_KEYS } from "@/lib/storage/keys";
+import { zustandLocalStorage } from "@/lib/storage/zustandStorage";
+
+interface ConfigState extends Config {
+  setPaleta: (paleta: Paleta) => void;
+  setIntensidadeNotificacao: (intensidade: IntensidadeNotificacao) => void;
+  setMostrarTempoDecorrido: (mostrar: boolean) => void;
+  setSenhaHash: (hash: string) => void;
+  setGoogleConectado: (conectado: boolean) => void;
+  setUltimaSincronizacaoEm: (data: string) => void;
+}
+
+export const useConfigStore = create<ConfigState>()(
+  persist(
+    (set) => ({
+      ...configPadrao,
+      setPaleta: (paleta) => set({ paleta }),
+      setIntensidadeNotificacao: (intensidadeNotificacao) =>
+        set({ intensidadeNotificacao }),
+      setMostrarTempoDecorrido: (mostrarTempoDecorrido) =>
+        set({ mostrarTempoDecorrido }),
+      setSenhaHash: (senhaHash) => set({ senhaHash }),
+      setGoogleConectado: (googleConectado) => set({ googleConectado }),
+      setUltimaSincronizacaoEm: (ultimaSincronizacaoEm) =>
+        set({ ultimaSincronizacaoEm }),
+    }),
+    {
+      name: STORAGE_KEYS.config,
+      storage: createJSONStorage(() => zustandLocalStorage),
+    },
+  ),
+);
