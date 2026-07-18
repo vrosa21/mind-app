@@ -42,6 +42,16 @@ export function tarefasConcluidasPorDia(tarefas: Task[], hoje: Date): PontoDiari
   });
 }
 
+export function minutosFocadosPorTarefa(
+  historico: TimerSession[],
+  taskId: string,
+): number {
+  const totalSeg = historico
+    .filter((h) => h.taskId === taskId)
+    .reduce((soma, h) => soma + h.tempoDecorridoSeg, 0);
+  return Math.round(totalSeg / 60);
+}
+
 export function tarefasConcluidasPorDiaDoMes(
   tarefas: Task[],
   mesReferencia: Date,

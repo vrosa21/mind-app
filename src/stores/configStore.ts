@@ -1,6 +1,12 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import { configPadrao, type Config, type Paleta, type IntensidadeNotificacao } from "@/types";
+import {
+  configPadrao,
+  type Config,
+  type Paleta,
+  type IntensidadeNotificacao,
+  type ModoVisualizacaoTarefas,
+} from "@/types";
 import { STORAGE_KEYS } from "@/lib/storage/keys";
 import { zustandLocalStorage } from "@/lib/storage/zustandStorage";
 
@@ -11,6 +17,7 @@ interface ConfigState extends Config {
   setSenhaHash: (hash: string) => void;
   setGoogleConectado: (conectado: boolean) => void;
   setUltimaSincronizacaoEm: (data: string) => void;
+  setModoVisualizacaoTarefas: (modo: ModoVisualizacaoTarefas) => void;
 }
 
 export const useConfigStore = create<ConfigState>()(
@@ -26,6 +33,8 @@ export const useConfigStore = create<ConfigState>()(
       setGoogleConectado: (googleConectado) => set({ googleConectado }),
       setUltimaSincronizacaoEm: (ultimaSincronizacaoEm) =>
         set({ ultimaSincronizacaoEm }),
+      setModoVisualizacaoTarefas: (modoVisualizacaoTarefas) =>
+        set({ modoVisualizacaoTarefas }),
     }),
     {
       name: STORAGE_KEYS.config,

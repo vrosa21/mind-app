@@ -21,9 +21,12 @@ interface TarefasState {
   criarTarefa: (input: NovaTarefaInput) => void;
   atualizarTarefa: (id: string, patch: PatchTarefa) => void;
   excluirTarefa: (id: string) => void;
+  duplicarTarefa: (id: string) => void;
   alternarMicroMeta: (tarefaId: string, microMetaId: string) => void;
+  editarMicroMeta: (tarefaId: string, microMetaId: string, titulo: string) => void;
   iniciarTarefa: (id: string) => void;
   concluirTarefa: (id: string) => void;
+  editarConclusao: (id: string, concluidaEm: string) => void;
   devolverAoPool: (id: string) => void;
 }
 
@@ -69,6 +72,28 @@ export const useTarefasStore = create<TarefasState>()(
         set({ tarefas: get().tarefas.filter((t) => t.id !== id) });
       },
 
+      // A cópia começa do zero: sem estado/histórico herdado, para não
+      // poluir os analytics com uma segunda "conclusão" da mesma tarefa.
+      duplicarTarefa: (id) => {
+        const original = get().tarefas.find((t) => t.id === id);
+        if (!original) return;
+        const copia: Task = {
+          id: crypto.randomUUID(),
+          titulo: `${original.titulo} (cópia)`,
+          notas: original.notas,
+          pool: original.pool,
+          estimativaMin: original.estimativaMin,
+          microMetas: original.microMetas.map((m) => ({
+            ...m,
+            id: crypto.randomUUID(),
+            concluida: false,
+          })),
+          estado: "disponivel",
+          criadaEm: new Date().toISOString(),
+        };
+        set({ tarefas: [copia, ...get().tarefas] });
+      },
+
       alternarMicroMeta: (tarefaId, microMetaId) => {
         set({
           tarefas: get().tarefas.map((t) =>
@@ -82,6 +107,21 @@ export const useTarefasStore = create<TarefasState>()(
                       : m,
                   ),
                   ultimaAtividadeEm: new Date().toISOString(),
+                },
+          ),
+        });
+      },
+
+      editarMicroMeta: (tarefaId, microMetaId, titulo) => {
+        set({
+          tarefas: get().tarefas.map((t) =>
+            t.id !== tarefaId
+              ? t
+              : {
+                  ...t,
+                  microMetas: t.microMetas.map((m) =>
+                    m.id === microMetaId ? { ...m, titulo } : m,
+                  ),
                 },
           ),
         });
@@ -127,6 +167,15 @@ export const useTarefasStore = create<TarefasState>()(
                   concluidaEm: agora,
                   ultimaAtividadeEm: agora,
                 }
+              : t,
+          ),
+        });
+      },
+      editarConclusao: (id, concluidaEm) => {
+        set({
+          tarefas: get().tarefas.map((t) =>
+            t.id === id && t.estado === "concluida"
+              ? { ...t, concluidaEm, ultimaAtividadeEm: new Date().toISOString() }
               : t,
           ),
         });

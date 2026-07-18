@@ -1,5 +1,6 @@
 export type Paleta = "calma" | "foco" | "suave";
 export type IntensidadeNotificacao = "silencioso" | "suave" | "normal";
+export type ModoVisualizacaoTarefas = "completa" | "resumida";
 
 export interface Config {
   paleta: Paleta;
@@ -8,6 +9,7 @@ export interface Config {
   senhaHash?: string;
   googleConectado: boolean;
   ultimaSincronizacaoEm?: string;
+  modoVisualizacaoTarefas: ModoVisualizacaoTarefas;
 }
 
 export const configPadrao: Config = {
@@ -15,4 +17,5 @@ export const configPadrao: Config = {
   intensidadeNotificacao: "suave",
   mostrarTempoDecorrido: true,
   googleConectado: false,
+  modoVisualizacaoTarefas: "completa",
 };
