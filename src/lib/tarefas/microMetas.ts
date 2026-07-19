@@ -3,7 +3,8 @@ import type { MicroMeta } from "@/types";
 const LIMITE_SEM_QUEBRA_MIN = 25;
 const TAMANHO_ALVO_BLOCO_MIN = 20;
 
-export function precisaQuebra(estimativaMin: number): boolean {
+export function precisaQuebra(estimativaMin?: number): boolean {
+  if (estimativaMin === undefined) return false;
   return estimativaMin > LIMITE_SEM_QUEBRA_MIN;
 }
 

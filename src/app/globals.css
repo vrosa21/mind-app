@@ -1,5 +1,11 @@
 @import "tailwindcss";
 
+/* Vermelho reservado exclusivamente para a flag "emergencial" (Lote B) —
+   fixo, igual nas 3 paletas, nunca usado para status ou outra coisa. */
+:root {
+  --emergencial: #c0392b;
+}
+
 /* Paletas sensoriais (Fase 5 expõe o controle; aplicadas desde já). */
 :root,
 [data-paleta="calma"] {
@@ -36,6 +42,7 @@
   --color-accent-foreground: var(--accent-foreground);
   --color-muted: var(--muted);
   --color-border: var(--border);
+  --color-emergencial: var(--emergencial);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }

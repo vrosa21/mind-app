@@ -3,8 +3,9 @@
 import { useState } from "react";
 import { useTarefasStore } from "@/stores/tarefasStore";
 import { precisaQuebra } from "@/lib/tarefas/microMetas";
+import { analisarEstimativa } from "@/lib/tarefas/formato";
 import { TarefaCamposForm } from "./TarefaCamposForm";
-import type { Pool } from "@/types";
+import type { Pool, UnidadeEstimativa } from "@/types";
 
 export function TarefaForm() {
   const criarTarefa = useTarefasStore((s) => s.criarTarefa);
@@ -12,24 +13,38 @@ export function TarefaForm() {
   const [titulo, setTitulo] = useState("");
   const [notas, setNotas] = useState("");
   const [pool, setPool] = useState<Pool>("deep");
-  const [estimativaMin, setEstimativaMin] = useState(25);
+  const [estimativaValor, setEstimativaValor] = useState("");
+  const [estimativaUnidade, setEstimativaUnidade] =
+    useState<UnidadeEstimativa>("min");
+  const [emergencial, setEmergencial] = useState(false);
+  const [quebrarEmMicrometas, setQuebrarEmMicrometas] = useState(true);
 
   function fechar() {
     setAberto(false);
     setTitulo("");
     setNotas("");
     setPool("deep");
-    setEstimativaMin(25);
+    setEstimativaValor("");
+    setEstimativaUnidade("min");
+    setEmergencial(false);
+    setQuebrarEmMicrometas(true);
   }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!titulo.trim()) return;
+    const { estimativaMin, estimativaUnidade: unidadeSalva } = analisarEstimativa(
+      estimativaValor,
+      estimativaUnidade,
+    );
     criarTarefa({
       titulo: titulo.trim(),
       notas: notas.trim() || undefined,
       pool,
       estimativaMin,
+      estimativaUnidade: unidadeSalva,
+      quebrarEmMicrometas,
+      emergencial,
     });
     fechar();
   }
@@ -46,6 +61,11 @@ export function TarefaForm() {
     );
   }
 
+  const { estimativaMin: estimativaMinPreview } = analisarEstimativa(
+    estimativaValor,
+    estimativaUnidade,
+  );
+
   return (
     <form
       onSubmit={handleSubmit}
@@ -58,13 +78,19 @@ export function TarefaForm() {
         setNotas={setNotas}
         pool={pool}
         setPool={setPool}
-        estimativaMin={estimativaMin}
-        setEstimativaMin={setEstimativaMin}
+        estimativaValor={estimativaValor}
+        setEstimativaValor={setEstimativaValor}
+        estimativaUnidade={estimativaUnidade}
+        setEstimativaUnidade={setEstimativaUnidade}
+        emergencial={emergencial}
+        setEmergencial={setEmergencial}
+        quebrarEmMicrometas={quebrarEmMicrometas}
+        setQuebrarEmMicrometas={setQuebrarEmMicrometas}
         autoFocus
       />
-      {precisaQuebra(estimativaMin) && (
+      {quebrarEmMicrometas && precisaQuebra(estimativaMinPreview) && (
         <p className="text-xs opacity-60">
-          Isso vira {Math.ceil(estimativaMin / 20)} micro-metas automaticamente.
+          Isso vira {Math.ceil(estimativaMinPreview! / 20)} micro-metas automaticamente.
         </p>
       )}
       <div className="flex gap-2">

@@ -1,5 +1,5 @@
 import { POOLS, POOL_LABELS } from "@/lib/tarefas/pools";
-import type { Pool } from "@/types";
+import type { Pool, UnidadeEstimativa } from "@/types";
 
 interface TarefaCamposFormProps {
   titulo: string;
@@ -8,8 +8,16 @@ interface TarefaCamposFormProps {
   setNotas: (v: string) => void;
   pool: Pool;
   setPool: (v: Pool) => void;
-  estimativaMin: number;
-  setEstimativaMin: (v: number) => void;
+  estimativaValor: string;
+  setEstimativaValor: (v: string) => void;
+  estimativaUnidade: UnidadeEstimativa;
+  setEstimativaUnidade: (v: UnidadeEstimativa) => void;
+  emergencial: boolean;
+  setEmergencial: (v: boolean) => void;
+  // Ausentes = não exibe o controle (edição de tarefa existente; a flag só
+  // se aplica na criação).
+  quebrarEmMicrometas?: boolean;
+  setQuebrarEmMicrometas?: (v: boolean) => void;
   autoFocus?: boolean;
 }
 
@@ -20,8 +28,14 @@ export function TarefaCamposForm({
   setNotas,
   pool,
   setPool,
-  estimativaMin,
-  setEstimativaMin,
+  estimativaValor,
+  setEstimativaValor,
+  estimativaUnidade,
+  setEstimativaUnidade,
+  emergencial,
+  setEmergencial,
+  quebrarEmMicrometas,
+  setQuebrarEmMicrometas,
   autoFocus,
 }: TarefaCamposFormProps) {
   return (
@@ -53,17 +67,40 @@ export function TarefaCamposForm({
           ))}
         </select>
         <input
-          type="number"
-          min={5}
-          max={480}
-          value={estimativaMin}
-          onChange={(e) =>
-            setEstimativaMin(Math.max(1, Number(e.target.value) || 1))
-          }
-          className="w-20 rounded-lg border border-[var(--border)] bg-transparent px-3 py-2 text-sm outline-none focus:border-[var(--accent)]"
+          type="text"
+          inputMode="decimal"
+          value={estimativaValor}
+          onChange={(e) => setEstimativaValor(e.target.value)}
+          placeholder="Estimativa (opcional)"
+          className="w-36 rounded-lg border border-[var(--border)] bg-transparent px-3 py-2 text-sm outline-none focus:border-[var(--accent)]"
         />
-        <span className="text-sm opacity-60">min</span>
+        <select
+          value={estimativaUnidade}
+          onChange={(e) => setEstimativaUnidade(e.target.value as UnidadeEstimativa)}
+          className="rounded-lg border border-[var(--border)] bg-transparent px-3 py-2 text-sm"
+        >
+          <option value="min">minutos</option>
+          <option value="horas">horas</option>
+        </select>
       </div>
+      {quebrarEmMicrometas !== undefined && setQuebrarEmMicrometas && (
+        <label className="flex items-center gap-2 text-sm opacity-80">
+          <input
+            type="checkbox"
+            checked={quebrarEmMicrometas}
+            onChange={(e) => setQuebrarEmMicrometas(e.target.checked)}
+          />
+          Quebrar em microtarefas?
+        </label>
+      )}
+      <label className="flex items-center gap-2 text-sm opacity-80">
+        <input
+          type="checkbox"
+          checked={emergencial}
+          onChange={(e) => setEmergencial(e.target.checked)}
+        />
+        Emergencial
+      </label>
     </>
   );
 }

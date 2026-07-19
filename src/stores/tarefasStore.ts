@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import type { Task, Pool } from "@/types";
+import type { Task, Pool, UnidadeEstimativa } from "@/types";
 import { gerarMicroMetas, precisaQuebra } from "@/lib/tarefas/microMetas";
 import { STORAGE_KEYS } from "@/lib/storage/keys";
 import { zustandLocalStorage } from "@/lib/storage/zustandStorage";
@@ -9,11 +9,18 @@ interface NovaTarefaInput {
   titulo: string;
   notas?: string;
   pool: Pool;
-  estimativaMin: number;
+  estimativaMin?: number;
+  estimativaUnidade?: UnidadeEstimativa;
+  // Default true — preserva o comportamento atual quando omitido.
+  quebrarEmMicrometas?: boolean;
+  emergencial?: boolean;
 }
 
 type PatchTarefa = Partial<
-  Pick<Task, "titulo" | "notas" | "pool" | "estimativaMin">
+  Pick<
+    Task,
+    "titulo" | "notas" | "pool" | "estimativaMin" | "estimativaUnidade" | "emergencial"
+  >
 >;
 
 interface TarefasState {
@@ -27,6 +34,7 @@ interface TarefasState {
   iniciarTarefa: (id: string) => void;
   concluirTarefa: (id: string) => void;
   editarConclusao: (id: string, concluidaEm: string) => void;
+  editarPrevisaoTermino: (id: string, previsaoTerminoEm: string) => void;
   devolverAoPool: (id: string) => void;
 }
 
@@ -35,16 +43,29 @@ export const useTarefasStore = create<TarefasState>()(
     (set, get) => ({
       tarefas: [],
 
-      criarTarefa: ({ titulo, notas, pool, estimativaMin }) => {
+      criarTarefa: ({
+        titulo,
+        notas,
+        pool,
+        estimativaMin,
+        estimativaUnidade,
+        quebrarEmMicrometas = true,
+        emergencial = false,
+      }) => {
         const tarefa: Task = {
           id: crypto.randomUUID(),
           titulo,
           notas,
           pool,
           estimativaMin,
-          microMetas: gerarMicroMetas(estimativaMin),
+          estimativaUnidade,
+          microMetas:
+            quebrarEmMicrometas && estimativaMin !== undefined
+              ? gerarMicroMetas(estimativaMin)
+              : [],
           estado: "disponivel",
           criadaEm: new Date().toISOString(),
+          emergencial,
         };
         set({ tarefas: [tarefa, ...get().tarefas] });
       },
@@ -83,6 +104,8 @@ export const useTarefasStore = create<TarefasState>()(
           notas: original.notas,
           pool: original.pool,
           estimativaMin: original.estimativaMin,
+          estimativaUnidade: original.estimativaUnidade,
+          emergencial: original.emergencial,
           microMetas: original.microMetas.map((m) => ({
             ...m,
             id: crypto.randomUUID(),
@@ -177,6 +200,14 @@ export const useTarefasStore = create<TarefasState>()(
             t.id === id && t.estado === "concluida"
               ? { ...t, concluidaEm, ultimaAtividadeEm: new Date().toISOString() }
               : t,
+          ),
+        });
+      },
+
+      editarPrevisaoTermino: (id, previsaoTerminoEm) => {
+        set({
+          tarefas: get().tarefas.map((t) =>
+            t.id === id ? { ...t, previsaoTerminoEm } : t,
           ),
         });
       },

@@ -4,6 +4,8 @@ export type Pool = "deep" | "admin" | "pessoal" | "urgente-flexivel";
 // tarefas não concluídas apenas retornam para 'disponivel'.
 export type EstadoTarefa = "disponivel" | "em-andamento" | "concluida";
 
+export type UnidadeEstimativa = "min" | "horas";
+
 export interface MicroMeta {
   id: string;
   titulo: string;
@@ -16,10 +18,16 @@ export interface Task {
   titulo: string;
   notas?: string;
   pool: Pool;
-  estimativaMin: number;
+  // Ausente = sem estimativa (não é o mesmo que zero). Sempre em minutos;
+  // estimativaUnidade guarda só a unidade escolhida pra exibição.
+  estimativaMin?: number;
+  estimativaUnidade?: UnidadeEstimativa;
   microMetas: MicroMeta[];
   estado: EstadoTarefa;
   criadaEm: string;
   ultimaAtividadeEm?: string;
   concluidaEm?: string;
+  // Planejamento (não é a data real de conclusão) — puramente informativo.
+  previsaoTerminoEm?: string;
+  emergencial?: boolean;
 }

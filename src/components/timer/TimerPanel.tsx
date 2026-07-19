@@ -8,12 +8,11 @@ import { useReflexoesStore } from "@/stores/reflexoesStore";
 import { useHidratado } from "@/hooks/useHidratado";
 import { segundosDecorridos } from "@/lib/timer/tempo";
 import { tocarChime } from "@/lib/timer/chime";
+import { DURACOES_RAPIDAS } from "@/lib/timer/constantes";
 import { OPCOES_HUMOR } from "@/lib/reflexao/humor";
 import { TimerVisual } from "./TimerVisual";
 import { TelaCarregando } from "@/components/layout/TelaCarregando";
 import type { Humor } from "@/types";
-
-const DURACOES_RAPIDAS = [15, 25, 45];
 
 export function TimerPanel() {
   const timerHidratado = useHidratado(useTimerStore.persist);
