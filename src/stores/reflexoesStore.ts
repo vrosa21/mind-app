@@ -12,11 +12,14 @@ interface NovaReflexaoInput {
   mente?: EstadoMente;
   saude?: EstadoSaude;
   texto?: string;
+  /** Sobrescreve o timestamp automático — útil para registros feitos após a meia-noite. */
+  criadaEm?: string;
 }
 
 interface ReflexoesState {
   reflexoes: Reflexao[];
   registrarReflexao: (input: NovaReflexaoInput) => void;
+  editarDataReflexao: (id: string, criadaEm: string) => void;
 }
 
 export const useReflexoesStore = create<ReflexoesState>()(
@@ -24,7 +27,7 @@ export const useReflexoesStore = create<ReflexoesState>()(
     (set, get) => ({
       reflexoes: [],
 
-      registrarReflexao: ({ sessionId, humor, emocoes, mente, saude, texto }) => {
+      registrarReflexao: ({ sessionId, humor, emocoes, mente, saude, texto, criadaEm }) => {
         const reflexao: Reflexao = {
           id: crypto.randomUUID(),
           sessionId,
@@ -33,7 +36,7 @@ export const useReflexoesStore = create<ReflexoesState>()(
           mente,
           saude,
           texto,
-          criadaEm: new Date().toISOString(),
+          criadaEm: criadaEm ?? new Date().toISOString(),
         };
         set({ reflexoes: [reflexao, ...get().reflexoes] });
 
@@ -46,6 +49,14 @@ export const useReflexoesStore = create<ReflexoesState>()(
           totalSessoesIniciadas: 0,
           totalRetomadas: 0,
           totalReflexoes: get().reflexoes.length,
+        });
+      },
+
+      editarDataReflexao: (id, criadaEm) => {
+        set({
+          reflexoes: get().reflexoes.map((r) =>
+            r.id === id ? { ...r, criadaEm } : r,
+          ),
         });
       },
     }),

@@ -79,16 +79,28 @@ function SeletorMultiplo<T extends string>({
   );
 }
 
+/** Converte um valor de <input type="date"> (yyyy-MM-dd) para ISO ao meio-dia
+ * local, evitando que o registro pule de dia perto da virada de fuso. */
+function dataYYYYMMDDParaISOMeioDia(dataYYYYMMDD: string): string {
+  const [ano, mes, dia] = dataYYYYMMDD.split("-").map(Number);
+  return new Date(ano, mes - 1, dia, 12, 0, 0).toISOString();
+}
+
 export function RegistroHumorDia() {
   const hidratado = useHidratado(useReflexoesStore.persist);
   const reflexoes = useReflexoesStore((s) => s.reflexoes);
   const registrarReflexao = useReflexoesStore((s) => s.registrarReflexao);
+  const editarDataReflexao = useReflexoesStore((s) => s.editarDataReflexao);
 
   const [humorEscolhido, setHumorEscolhido] = useState<Humor | null>(null);
   const [emocoesEscolhidas, setEmocoesEscolhidas] = useState<Emocao[]>([]);
   const [menteEscolhida, setMenteEscolhida] = useState<EstadoMente | null>(null);
   const [saudeEscolhida, setSaudeEscolhida] = useState<EstadoSaude | null>(null);
   const [texto, setTexto] = useState("");
+  const [dataEscolhida, setDataEscolhida] = useState(() =>
+    format(new Date(), "yyyy-MM-dd"),
+  );
+  const [editandoDataId, setEditandoDataId] = useState<string | null>(null);
 
   if (!hidratado) return <TelaCarregando />;
 
@@ -119,12 +131,14 @@ export function RegistroHumorDia() {
             mente: menteEscolhida ?? undefined,
             saude: saudeEscolhida ?? undefined,
             texto: texto.trim(),
+            criadaEm: dataYYYYMMDDParaISOMeioDia(dataEscolhida),
           });
           setHumorEscolhido(null);
           setEmocoesEscolhidas([]);
           setMenteEscolhida(null);
           setSaudeEscolhida(null);
           setTexto("");
+          setDataEscolhida(format(new Date(), "yyyy-MM-dd"));
         }}
         className="flex flex-col gap-4 rounded-lg border border-[var(--border)] p-4"
       >
@@ -134,6 +148,22 @@ export function RegistroHumorDia() {
           </h3>
           <p className="text-xs opacity-50">
             Um registro rápido, sem certo ou errado.
+          </p>
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <label htmlFor="data-registro-humor" className="text-xs opacity-70">
+            Data
+          </label>
+          <input
+            id="data-registro-humor"
+            type="date"
+            value={dataEscolhida}
+            onChange={(e) => setDataEscolhida(e.target.value)}
+            className="w-fit rounded-lg border border-[var(--border)] bg-transparent px-3 py-1.5 text-sm outline-none focus:border-[var(--accent)]"
+          />
+          <p className="text-xs opacity-40">
+            Avaliando depois da meia-noite? Ajuste para o dia a que se refere.
           </p>
         </div>
 
@@ -252,11 +282,33 @@ export function RegistroHumorDia() {
                 >
                   {opcaoHumor && <span className="text-lg">{opcaoHumor.emoji}</span>}
                   <div className="flex flex-col gap-0.5">
-                    <span className="text-xs opacity-50">
-                      {format(new Date(r.criadaEm), "d 'de' MMMM, HH:mm", {
-                        locale: ptBR,
-                      })}
-                    </span>
+                    {editandoDataId === r.id ? (
+                      <input
+                        type="date"
+                        autoFocus
+                        defaultValue={format(new Date(r.criadaEm), "yyyy-MM-dd")}
+                        onChange={(e) => {
+                          if (!e.target.value) return;
+                          editarDataReflexao(
+                            r.id,
+                            dataYYYYMMDDParaISOMeioDia(e.target.value),
+                          );
+                        }}
+                        onBlur={() => setEditandoDataId(null)}
+                        className="w-fit rounded-md border border-[var(--border)] bg-transparent px-2 py-0.5 text-xs outline-none focus:border-[var(--accent)]"
+                      />
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setEditandoDataId(r.id)}
+                        title="Editar a data deste registro"
+                        className="w-fit text-xs opacity-50 underline decoration-dotted hover:opacity-80"
+                      >
+                        {format(new Date(r.criadaEm), "d 'de' MMMM, HH:mm", {
+                          locale: ptBR,
+                        })}
+                      </button>
+                    )}
                     {r.texto && <span className="text-sm">{r.texto}</span>}
                     {(labelsEmocoes.length > 0 || labelMente || labelSaude) && (
                       <span className="text-xs opacity-50">
