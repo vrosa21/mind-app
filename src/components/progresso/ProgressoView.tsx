@@ -6,9 +6,13 @@ import { useHidratado } from "@/hooks/useHidratado";
 import { TelaCarregando } from "@/components/layout/TelaCarregando";
 import { GraficoBarras } from "./GraficoBarras";
 import { CalendarioMensal } from "./CalendarioMensal";
+import { CartaoIndicadorPeriodo } from "./CartaoIndicadorPeriodo";
+import { FiltroTarefasPorData } from "./FiltroTarefasPorData";
 import {
   minutosFocadosPorDia,
   tarefasConcluidasPorDia,
+  tarefasCriadasPorPeriodo,
+  tarefasConcluidasPorPeriodo,
 } from "@/lib/progresso/agregacao";
 
 export function ProgressoView() {
@@ -42,6 +46,34 @@ export function ProgressoView() {
         />
       </div>
       <CalendarioMensal tarefas={tarefas} />
+      <div className="flex flex-col gap-4 sm:flex-row">
+        <CartaoIndicadorPeriodo
+          titulo="Tarefas criadas"
+          contagem={tarefasCriadasPorPeriodo(tarefas, hoje)}
+          unidade="tarefa(s)"
+        />
+        <CartaoIndicadorPeriodo
+          titulo="Tarefas concluídas"
+          contagem={tarefasConcluidasPorPeriodo(tarefas, hoje)}
+          unidade="tarefa(s)"
+        />
+      </div>
+      <div className="flex flex-col gap-4 sm:flex-row">
+        <div className="flex-1">
+          <FiltroTarefasPorData
+            titulo="Filtrar por data de criação"
+            campo="criacao"
+            tarefas={tarefas}
+          />
+        </div>
+        <div className="flex-1">
+          <FiltroTarefasPorData
+            titulo="Filtrar por data de conclusão"
+            campo="conclusao"
+            tarefas={tarefas}
+          />
+        </div>
+      </div>
     </div>
   );
 }
