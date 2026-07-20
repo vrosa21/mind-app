@@ -3,7 +3,9 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTarefasStore } from "@/stores/tarefasStore";
+import { useTagsStore } from "@/stores/tagsStore";
 import { useTimerStore } from "@/stores/timerStore";
+import { ChipStatus } from "./ChipStatus";
 import { POOL_LABELS } from "@/lib/tarefas/pools";
 import { precisaQuebra } from "@/lib/tarefas/microMetas";
 import { format } from "date-fns";
@@ -36,6 +38,7 @@ export function TarefaCard({
   const excluirTarefa = useTarefasStore((s) => s.excluirTarefa);
   const duplicarTarefa = useTarefasStore((s) => s.duplicarTarefa);
   const atualizarTarefa = useTarefasStore((s) => s.atualizarTarefa);
+  const tags = useTagsStore((s) => s.tags);
   const iniciarSessao = useTimerStore((s) => s.iniciarSessao);
   const encerrarSessao = useTimerStore((s) => s.encerrar);
   const sessaoAtual = useTimerStore((s) => s.sessaoAtual);
@@ -49,6 +52,7 @@ export function TarefaCard({
   const [estimativaUnidade, setEstimativaUnidade] =
     useState<UnidadeEstimativa>("min");
   const [emergencial, setEmergencial] = useState(tarefa.emergencial ?? false);
+  const [tagIds, setTagIds] = useState<string[]>(tarefa.tagIds ?? []);
   const [editandoMicroMetaId, setEditandoMicroMetaId] = useState<string | null>(
     null,
   );
@@ -70,6 +74,7 @@ export function TarefaCard({
     );
     setEstimativaUnidade(tarefa.estimativaUnidade ?? "min");
     setEmergencial(tarefa.emergencial ?? false);
+    setTagIds(tarefa.tagIds ?? []);
     setEditando(true);
   }
 
@@ -87,6 +92,7 @@ export function TarefaCard({
       estimativaMin,
       estimativaUnidade: unidadeSalva,
       emergencial,
+      tagIds: tagIds.length > 0 ? tagIds : undefined,
     });
     setEditando(false);
   }
@@ -163,6 +169,8 @@ export function TarefaCard({
           setEstimativaUnidade={setEstimativaUnidade}
           emergencial={emergencial}
           setEmergencial={setEmergencial}
+          tagIds={tagIds}
+          setTagIds={setTagIds}
           autoFocus
         />
         {cruzaLimiar && (
@@ -204,6 +212,7 @@ export function TarefaCard({
           <p className={concluida ? "opacity-60 line-through" : "font-medium"}>
             {tarefa.titulo}
           </p>
+          <ChipStatus estado={tarefa.estado} />
           {tarefa.emergencial && (
             <span className="text-xs font-medium text-[var(--emergencial)]">
               Emergencial
@@ -224,10 +233,11 @@ export function TarefaCard({
     >
       <div className="flex items-start justify-between gap-2">
         <div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <p className={concluida ? "opacity-60 line-through" : "font-medium"}>
               {tarefa.titulo}
             </p>
+            <ChipStatus estado={tarefa.estado} />
             {tarefa.emergencial && (
               <span className="rounded-full border border-[var(--emergencial)] px-2 py-0.5 text-xs font-medium text-[var(--emergencial)]">
                 Emergencial
@@ -239,6 +249,22 @@ export function TarefaCard({
             {formatarEstimativa(tarefa.estimativaMin, tarefa.estimativaUnidade)} ·
             Criada em {formatarData(tarefa.criadaEm)}
           </p>
+          {tarefa.tagIds && tarefa.tagIds.length > 0 && (
+            <div className="mt-1 flex flex-wrap gap-1">
+              {tarefa.tagIds.map((id) => {
+                const tag = tags.find((t) => t.id === id);
+                if (!tag) return null;
+                return (
+                  <span
+                    key={id}
+                    className="rounded-full border border-[var(--border)] px-2 py-0.5 text-xs opacity-70"
+                  >
+                    {tag.nome}
+                  </span>
+                );
+              })}
+            </div>
+          )}
           {tarefa.notas && (
             <p className="mt-1 text-sm opacity-70">{tarefa.notas}</p>
           )}

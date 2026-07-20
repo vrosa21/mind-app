@@ -5,8 +5,9 @@ import {
   tarefasCriadasNoDia,
   tarefasConcluidasNoDia,
 } from "@/lib/progresso/agregacao";
-import { ESTADO_LABELS, ORDEM_STATUS } from "@/lib/tarefas/estados";
+import { ORDEM_STATUS } from "@/lib/tarefas/estados";
 import { POOL_LABELS } from "@/lib/tarefas/pools";
+import { ChipStatus } from "@/components/tarefas/ChipStatus";
 import type { Task } from "@/types";
 
 interface FiltroTarefasPorDataProps {
@@ -65,8 +66,9 @@ export function FiltroTarefasPorData({
               className="flex items-center justify-between gap-2 rounded-lg border border-[var(--border)] p-3"
             >
               <span className="text-sm">{t.titulo}</span>
-              <span className="shrink-0 text-xs opacity-60">
-                {ESTADO_LABELS[t.estado]} · {POOL_LABELS[t.pool]}
+              <span className="flex shrink-0 items-center gap-2">
+                <ChipStatus estado={t.estado} />
+                <span className="text-xs opacity-60">{POOL_LABELS[t.pool]}</span>
               </span>
             </li>
           ))}

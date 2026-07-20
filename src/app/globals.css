@@ -6,6 +6,14 @@
   --emergencial: #c0392b;
 }
 
+/* Cores de status (Lote C) — fixas entre paletas, mesmo padrão do
+   --emergencial acima. Nunca vermelho (reservado ao emergencial). */
+:root {
+  --status-concluida: #2f6f9f;
+  --status-em-andamento: #3f8f5f;
+  --status-disponivel: #8a9299;
+}
+
 /* Paletas sensoriais (Fase 5 expõe o controle; aplicadas desde já). */
 :root,
 [data-paleta="calma"] {
@@ -43,6 +51,9 @@
   --color-muted: var(--muted);
   --color-border: var(--border);
   --color-emergencial: var(--emergencial);
+  --color-status-concluida: var(--status-concluida);
+  --color-status-em-andamento: var(--status-em-andamento);
+  --color-status-disponivel: var(--status-disponivel);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }

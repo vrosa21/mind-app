@@ -4,6 +4,7 @@ import { useConfigStore } from "@/stores/configStore";
 import { useHidratado } from "@/hooks/useHidratado";
 import { TelaCarregando } from "@/components/layout/TelaCarregando";
 import { DriveSync } from "./DriveSync";
+import { GerenciadorTags } from "./GerenciadorTags";
 import type { Paleta, IntensidadeNotificacao } from "@/types";
 
 const PALETAS: { valor: Paleta; label: string; descricao: string }[] = [
@@ -110,6 +111,8 @@ export function ConfigView() {
           Mostrar o tempo decorrido durante a sessão
         </label>
       </section>
+
+      <GerenciadorTags />
 
       <DriveSync />
     </div>

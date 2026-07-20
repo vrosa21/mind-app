@@ -13,6 +13,11 @@ export interface MicroMeta {
   concluida: boolean;
 }
 
+export interface Tag {
+  id: string;
+  nome: string;
+}
+
 export interface Task {
   id: string;
   titulo: string;
@@ -30,4 +35,6 @@ export interface Task {
   // Planejamento (não é a data real de conclusão) — puramente informativo.
   previsaoTerminoEm?: string;
   emergencial?: boolean;
+  // Ausente = sem tags (retrocompat com tarefas criadas antes deste campo).
+  tagIds?: string[];
 }

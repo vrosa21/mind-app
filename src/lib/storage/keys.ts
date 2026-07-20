@@ -8,6 +8,7 @@ export const STORAGE_KEYS = {
   // vira um 4º/5º arquivo sincronizado ou se é dobrado em outro.
   emblemas: "mind:emblemas.json",
   reflexoes: "mind:reflexoes.json",
+  tags: "mind:tags.json",
 } as const;
 
 // Estado de sessão local (não sincroniza com o Drive).

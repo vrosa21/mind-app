@@ -14,12 +14,19 @@ interface NovaTarefaInput {
   // Default true — preserva o comportamento atual quando omitido.
   quebrarEmMicrometas?: boolean;
   emergencial?: boolean;
+  tagIds?: string[];
 }
 
 type PatchTarefa = Partial<
   Pick<
     Task,
-    "titulo" | "notas" | "pool" | "estimativaMin" | "estimativaUnidade" | "emergencial"
+    | "titulo"
+    | "notas"
+    | "pool"
+    | "estimativaMin"
+    | "estimativaUnidade"
+    | "emergencial"
+    | "tagIds"
   >
 >;
 
@@ -36,6 +43,7 @@ interface TarefasState {
   editarConclusao: (id: string, concluidaEm: string) => void;
   editarPrevisaoTermino: (id: string, previsaoTerminoEm: string) => void;
   devolverAoPool: (id: string) => void;
+  removerTagDeTodas: (tagId: string) => void;
 }
 
 export const useTarefasStore = create<TarefasState>()(
@@ -51,6 +59,7 @@ export const useTarefasStore = create<TarefasState>()(
         estimativaUnidade,
         quebrarEmMicrometas = true,
         emergencial = false,
+        tagIds,
       }) => {
         const tarefa: Task = {
           id: crypto.randomUUID(),
@@ -66,6 +75,7 @@ export const useTarefasStore = create<TarefasState>()(
           estado: "disponivel",
           criadaEm: new Date().toISOString(),
           emergencial,
+          tagIds,
         };
         set({ tarefas: [tarefa, ...get().tarefas] });
       },
@@ -106,6 +116,7 @@ export const useTarefasStore = create<TarefasState>()(
           estimativaMin: original.estimativaMin,
           estimativaUnidade: original.estimativaUnidade,
           emergencial: original.emergencial,
+          tagIds: original.tagIds,
           microMetas: original.microMetas.map((m) => ({
             ...m,
             id: crypto.randomUUID(),
@@ -208,6 +219,18 @@ export const useTarefasStore = create<TarefasState>()(
         set({
           tarefas: get().tarefas.map((t) =>
             t.id === id ? { ...t, previsaoTerminoEm } : t,
+          ),
+        });
+      },
+
+      // Deleção segura de tag (Lote C): a tarefa nunca é apagada, só perde
+      // a referência ao id removido.
+      removerTagDeTodas: (tagId) => {
+        set({
+          tarefas: get().tarefas.map((t) =>
+            t.tagIds?.includes(tagId)
+              ? { ...t, tagIds: t.tagIds.filter((id) => id !== tagId) }
+              : t,
           ),
         });
       },

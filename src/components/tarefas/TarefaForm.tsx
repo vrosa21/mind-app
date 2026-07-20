@@ -17,6 +17,7 @@ export function TarefaForm() {
   const [estimativaUnidade, setEstimativaUnidade] =
     useState<UnidadeEstimativa>("min");
   const [emergencial, setEmergencial] = useState(false);
+  const [tagIds, setTagIds] = useState<string[]>([]);
   const [quebrarEmMicrometas, setQuebrarEmMicrometas] = useState(true);
 
   function fechar() {
@@ -27,6 +28,7 @@ export function TarefaForm() {
     setEstimativaValor("");
     setEstimativaUnidade("min");
     setEmergencial(false);
+    setTagIds([]);
     setQuebrarEmMicrometas(true);
   }
 
@@ -45,6 +47,7 @@ export function TarefaForm() {
       estimativaUnidade: unidadeSalva,
       quebrarEmMicrometas,
       emergencial,
+      tagIds: tagIds.length > 0 ? tagIds : undefined,
     });
     fechar();
   }
@@ -84,6 +87,8 @@ export function TarefaForm() {
         setEstimativaUnidade={setEstimativaUnidade}
         emergencial={emergencial}
         setEmergencial={setEmergencial}
+        tagIds={tagIds}
+        setTagIds={setTagIds}
         quebrarEmMicrometas={quebrarEmMicrometas}
         setQuebrarEmMicrometas={setQuebrarEmMicrometas}
         autoFocus
