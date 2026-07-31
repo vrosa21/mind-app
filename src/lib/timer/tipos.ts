@@ -9,4 +9,5 @@ export interface SessaoAtiva {
   acumuladoSeg: number;
   retomadoEm: string;
   estado: "ativa" | "pausada";
+  metadeSinalizada?: boolean;
 }

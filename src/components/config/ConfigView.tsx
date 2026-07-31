@@ -79,7 +79,8 @@ export function ConfigView() {
           Intensidade de notificação
         </h2>
         <p className="text-sm opacity-60">
-          Controla o volume do sinal sonoro e a vibração ao fim de uma sessão.
+          Controla o volume do sinal sonoro e a vibração na metade e ao fim de
+          uma sessão.
         </p>
         <div className="flex gap-2">
           {INTENSIDADES.map((i) => (

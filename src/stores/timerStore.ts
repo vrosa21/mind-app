@@ -18,6 +18,7 @@ interface TimerState {
   pausar: () => void;
   retomar: () => void;
   encerrar: (motivo: "concluida" | "interrompida") => void;
+  marcarMetadeSinalizada: () => void;
 }
 
 // totalReflexoes fica em 0 aqui de propósito: essas regras (tipo
@@ -52,6 +53,7 @@ export const useTimerStore = create<TimerState>()(
             acumuladoSeg: 0,
             retomadoEm: agora,
             estado: "ativa",
+            metadeSinalizada: false,
           },
           totalSessoesIniciadas: get().totalSessoesIniciadas + 1,
         });
@@ -82,6 +84,12 @@ export const useTimerStore = create<TimerState>()(
           totalRetomadas: get().totalRetomadas + 1,
         });
         useGamificacaoStore.getState().avaliarConquistas(contextoConquistas(get()));
+      },
+
+      marcarMetadeSinalizada: () => {
+        const sessao = get().sessaoAtual;
+        if (!sessao || sessao.metadeSinalizada) return;
+        set({ sessaoAtual: { ...sessao, metadeSinalizada: true } });
       },
 
       encerrar: (motivo) => {

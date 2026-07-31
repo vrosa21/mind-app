@@ -25,6 +25,7 @@ export function TimerPanel() {
   const pausar = useTimerStore((s) => s.pausar);
   const retomar = useTimerStore((s) => s.retomar);
   const encerrar = useTimerStore((s) => s.encerrar);
+  const marcarMetadeSinalizada = useTimerStore((s) => s.marcarMetadeSinalizada);
   const registrarReflexao = useReflexoesStore((s) => s.registrarReflexao);
   const jaRefletida = useReflexoesStore((s) =>
     ultimoRegistro
@@ -41,7 +42,7 @@ export function TimerPanel() {
   );
 
   const [duracaoEscolhida, setDuracaoEscolhida] = useState(25);
-  const [, forcarTick] = useState(0);
+  const [tick, forcarTick] = useState(0);
   const [humorEscolhido, setHumorEscolhido] = useState<Humor | null>(null);
   const [textoReflexao, setTextoReflexao] = useState("");
   const [reflexaoDispensadaId, setReflexaoDispensadaId] = useState<
@@ -57,11 +58,26 @@ export function TimerPanel() {
   useEffect(() => {
     if (!sessaoAtual || sessaoAtual.estado !== "ativa") return;
     const totalSeg = sessaoAtual.duracaoPlanejadaMin * 60;
-    if (segundosDecorridos(sessaoAtual) >= totalSeg) {
-      encerrar("concluida");
-      tocarChime(intensidadeNotificacao);
+    const decorrido = segundosDecorridos(sessaoAtual);
+    if (
+      !sessaoAtual.metadeSinalizada &&
+      decorrido >= totalSeg / 2 &&
+      decorrido < totalSeg
+    ) {
+      marcarMetadeSinalizada();
+      tocarChime(intensidadeNotificacao, "metade");
     }
-  }, [sessaoAtual, intensidadeNotificacao, encerrar]);
+    if (decorrido >= totalSeg) {
+      encerrar("concluida");
+      tocarChime(intensidadeNotificacao, "fim");
+    }
+  }, [
+    tick,
+    sessaoAtual,
+    intensidadeNotificacao,
+    encerrar,
+    marcarMetadeSinalizada,
+  ]);
 
   if (!hidratado) return <TelaCarregando />;
 

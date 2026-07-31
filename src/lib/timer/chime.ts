@@ -1,9 +1,16 @@
 import type { IntensidadeNotificacao } from "@/types";
 
-// Sinal sonoro suave ao fim da sessão — sem depender de arquivos de
+// Sinal sonoro suave nos marcos da sessão — sem depender de arquivos de
 // áudio externos. Intensidade respeita a preferência sensorial do
 // usuário (Config.intensidadeNotificacao).
-export function tocarChime(intensidade: IntensidadeNotificacao): void {
+//
+// "fim": duas notas ascendentes, marcando a conclusão da sessão.
+// "metade": uma única nota grave e mais curta, avisando a metade do
+// tempo sem chamar tanta atenção quanto o som de conclusão.
+export function tocarChime(
+  intensidade: IntensidadeNotificacao,
+  variante: "fim" | "metade" = "fim",
+): void {
   if (intensidade === "silencioso") return;
   if (typeof window === "undefined") return;
 
@@ -14,10 +21,13 @@ export function tocarChime(intensidade: IntensidadeNotificacao): void {
   if (!AudioContextClasse) return;
 
   const ctx = new AudioContextClasse();
-  const volume = intensidade === "normal" ? 0.15 : 0.06;
-  const duracao = intensidade === "normal" ? 0.9 : 0.5;
+  const volumeBase = intensidade === "normal" ? 0.15 : 0.06;
+  const duracaoBase = intensidade === "normal" ? 0.9 : 0.5;
+  const volume = variante === "metade" ? volumeBase * 0.6 : volumeBase;
+  const duracao = variante === "metade" ? 0.35 : duracaoBase;
+  const frequencias = variante === "metade" ? [660] : [880, 1320];
 
-  [880, 1320].forEach((freq, i) => {
+  frequencias.forEach((freq, i) => {
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.type = "sine";
@@ -31,7 +41,7 @@ export function tocarChime(intensidade: IntensidadeNotificacao): void {
     osc.stop(inicio + duracao + 0.05);
   });
 
-  if (typeof navigator !== "undefined" && navigator.vibrate) {
+  if (variante === "fim" && typeof navigator !== "undefined" && navigator.vibrate) {
     navigator.vibrate(intensidade === "normal" ? [80, 40, 80] : [40]);
   }
 
