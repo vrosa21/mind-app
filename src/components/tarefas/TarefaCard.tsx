@@ -8,6 +8,7 @@ import { useTimerStore } from "@/stores/timerStore";
 import { ChipStatus } from "./ChipStatus";
 import { POOL_LABELS } from "@/lib/tarefas/pools";
 import { precisaQuebra } from "@/lib/tarefas/microMetas";
+import { ehRotina, feitoHoje, formatarDiasSemana } from "@/lib/tarefas/rotinas";
 import { format } from "date-fns";
 import {
   formatarData,
@@ -33,6 +34,7 @@ export function TarefaCard({
   const editarMicroMeta = useTarefasStore((s) => s.editarMicroMeta);
   const iniciarTarefa = useTarefasStore((s) => s.iniciarTarefa);
   const concluirTarefa = useTarefasStore((s) => s.concluirTarefa);
+  const alternarFeitoHoje = useTarefasStore((s) => s.alternarFeitoHoje);
   const editarConclusao = useTarefasStore((s) => s.editarConclusao);
   const editarPrevisaoTermino = useTarefasStore((s) => s.editarPrevisaoTermino);
   const excluirTarefa = useTarefasStore((s) => s.excluirTarefa);
@@ -53,6 +55,11 @@ export function TarefaCard({
     useState<UnidadeEstimativa>("min");
   const [emergencial, setEmergencial] = useState(tarefa.emergencial ?? false);
   const [tagIds, setTagIds] = useState<string[]>(tarefa.tagIds ?? []);
+  const [rotina, setRotina] = useState(ehRotina(tarefa));
+  const [diasSemana, setDiasSemana] = useState<number[]>(tarefa.diasSemana ?? []);
+  const [repetirAte, setRepetirAte] = useState(
+    tarefa.repetirAte ? format(new Date(tarefa.repetirAte), "yyyy-MM-dd") : "",
+  );
   const [editandoMicroMetaId, setEditandoMicroMetaId] = useState<string | null>(
     null,
   );
@@ -64,6 +71,8 @@ export function TarefaCard({
 
   const concluida = tarefa.estado === "concluida";
   const timerOcupado = !!sessaoAtual;
+  const rotinaTarefa = ehRotina(tarefa);
+  const feitoHojeAtivo = feitoHoje(tarefa, new Date());
 
   function abrirEdicao() {
     setTitulo(tarefa.titulo);
@@ -75,6 +84,11 @@ export function TarefaCard({
     setEstimativaUnidade(tarefa.estimativaUnidade ?? "min");
     setEmergencial(tarefa.emergencial ?? false);
     setTagIds(tarefa.tagIds ?? []);
+    setRotina(ehRotina(tarefa));
+    setDiasSemana(tarefa.diasSemana ?? []);
+    setRepetirAte(
+      tarefa.repetirAte ? format(new Date(tarefa.repetirAte), "yyyy-MM-dd") : "",
+    );
     setEditando(true);
   }
 
@@ -93,6 +107,8 @@ export function TarefaCard({
       estimativaUnidade: unidadeSalva,
       emergencial,
       tagIds: tagIds.length > 0 ? tagIds : undefined,
+      diasSemana: rotina ? diasSemana : undefined,
+      repetirAte: rotina && repetirAte ? dataInputParaISOMeioDia(repetirAte) : undefined,
     });
     setEditando(false);
   }
@@ -171,6 +187,12 @@ export function TarefaCard({
           setEmergencial={setEmergencial}
           tagIds={tagIds}
           setTagIds={setTagIds}
+          rotina={rotina}
+          setRotina={setRotina}
+          diasSemana={diasSemana}
+          setDiasSemana={setDiasSemana}
+          repetirAte={repetirAte}
+          setRepetirAte={setRepetirAte}
           autoFocus
         />
         {cruzaLimiar && (
@@ -212,7 +234,13 @@ export function TarefaCard({
           <p className={concluida ? "opacity-60 line-through" : "font-medium"}>
             {tarefa.titulo}
           </p>
-          <ChipStatus estado={tarefa.estado} />
+          {rotinaTarefa ? (
+            <span className="rounded-full border border-[var(--border)] px-2 py-0.5 text-xs opacity-70">
+              Rotina{feitoHojeAtivo ? " · feito hoje" : ""}
+            </span>
+          ) : (
+            <ChipStatus estado={tarefa.estado} />
+          )}
           {tarefa.emergencial && (
             <span className="text-xs font-medium text-[var(--emergencial)]">
               Emergencial
@@ -237,7 +265,13 @@ export function TarefaCard({
             <p className={concluida ? "opacity-60 line-through" : "font-medium"}>
               {tarefa.titulo}
             </p>
-            <ChipStatus estado={tarefa.estado} />
+            {rotinaTarefa ? (
+              <span className="rounded-full border border-[var(--border)] px-2 py-0.5 text-xs font-medium opacity-70">
+                Rotina{feitoHojeAtivo ? " · feito hoje" : ""}
+              </span>
+            ) : (
+              <ChipStatus estado={tarefa.estado} />
+            )}
             {tarefa.emergencial && (
               <span className="rounded-full border border-[var(--emergencial)] px-2 py-0.5 text-xs font-medium text-[var(--emergencial)]">
                 Emergencial
@@ -268,7 +302,12 @@ export function TarefaCard({
           {tarefa.notas && (
             <p className="mt-1 text-sm opacity-70">{tarefa.notas}</p>
           )}
-          {editandoPrevisao ? (
+          {rotinaTarefa ? (
+            <p className="mt-1 text-xs opacity-60">
+              Dias: {formatarDiasSemana(tarefa.diasSemana!)} · Repetir até:{" "}
+              {tarefa.repetirAte ? formatarData(tarefa.repetirAte) : "sem término"}
+            </p>
+          ) : editandoPrevisao ? (
             <div className="mt-1 flex items-center gap-2 text-xs">
               <input
                 type="date"
@@ -302,7 +341,7 @@ export function TarefaCard({
               </button>
             </p>
           )}
-          {concluida &&
+          {!rotinaTarefa && concluida &&
             (editandoConclusao ? (
               <div className="mt-1 flex items-center gap-2 text-xs">
                 <input
@@ -487,13 +526,27 @@ export function TarefaCard({
               Iniciar
             </button>
           )}
-          <button
-            type="button"
-            onClick={handleConcluir}
-            className="rounded-full bg-[var(--accent)] px-3 py-1 text-xs font-medium text-[var(--accent-foreground)]"
-          >
-            Concluir
-          </button>
+          {rotinaTarefa ? (
+            <button
+              type="button"
+              onClick={() => alternarFeitoHoje(tarefa.id)}
+              className={
+                feitoHojeAtivo
+                  ? "rounded-full border border-[var(--border)] px-3 py-1 text-xs opacity-70 hover:opacity-100"
+                  : "rounded-full bg-[var(--accent)] px-3 py-1 text-xs font-medium text-[var(--accent-foreground)]"
+              }
+            >
+              {feitoHojeAtivo ? "Desfazer" : "Feito hoje"}
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={handleConcluir}
+              className="rounded-full bg-[var(--accent)] px-3 py-1 text-xs font-medium text-[var(--accent-foreground)]"
+            >
+              Concluir
+            </button>
+          )}
         </div>
       )}
     </div>

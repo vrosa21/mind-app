@@ -8,6 +8,7 @@ import { GraficoBarras } from "./GraficoBarras";
 import { CalendarioMensal } from "./CalendarioMensal";
 import { CartaoIndicadorPeriodo } from "./CartaoIndicadorPeriodo";
 import { FiltroTarefasPorData } from "./FiltroTarefasPorData";
+import { ehRotina } from "@/lib/tarefas/rotinas";
 import {
   minutosFocadosPorDia,
   tarefasConcluidasPorDia,
@@ -21,11 +22,14 @@ export function ProgressoView() {
   const hidratado = timerHidratado && tarefasHidratado;
 
   const historico = useTimerStore((s) => s.historico);
-  const tarefas = useTarefasStore((s) => s.tarefas);
+  const todasTarefas = useTarefasStore((s) => s.tarefas);
 
   if (!hidratado) return <TelaCarregando />;
 
   const hoje = new Date();
+  // Rotinas nunca entram nos números do /progresso — não têm estado
+  // terminal `concluida` e não são "tarefas comuns" para efeito de análise.
+  const tarefas = todasTarefas.filter((t) => !ehRotina(t));
 
   return (
     <div className="flex flex-col gap-4">

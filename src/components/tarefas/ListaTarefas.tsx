@@ -5,6 +5,7 @@ import { useTarefasStore } from "@/stores/tarefasStore";
 import { useConfigStore } from "@/stores/configStore";
 import { normalizar } from "@/lib/tarefas/formato";
 import { POOL_LABELS } from "@/lib/tarefas/pools";
+import { ehRotina } from "@/lib/tarefas/rotinas";
 import { TarefaCard } from "./TarefaCard";
 import type { Task, ModoVisualizacaoTarefas } from "@/types";
 
@@ -59,9 +60,11 @@ export function ListaTarefas() {
   const termoNormalizado = normalizar(busca.trim());
   const filtradas = tarefas.filter((t) => tarefaCorresponde(t, termoNormalizado));
 
-  const emAndamento = filtradas.filter((t) => t.estado === "em-andamento");
-  const disponiveis = filtradas.filter((t) => t.estado === "disponivel");
-  const concluidas = filtradas.filter((t) => t.estado === "concluida");
+  const rotinas = filtradas.filter(ehRotina);
+  const comuns = filtradas.filter((t) => !ehRotina(t));
+  const emAndamento = comuns.filter((t) => t.estado === "em-andamento");
+  const disponiveis = comuns.filter((t) => t.estado === "disponivel");
+  const concluidas = comuns.filter((t) => t.estado === "concluida");
 
   return (
     <div className="flex flex-col gap-6">
@@ -101,6 +104,9 @@ export function ListaTarefas() {
           />
           {concluidas.length > 0 && (
             <Secao titulo="Concluídas" itens={concluidas} modo={modo} />
+          )}
+          {rotinas.length > 0 && (
+            <Secao titulo="Rotinas" itens={rotinas} modo={modo} />
           )}
         </>
       )}

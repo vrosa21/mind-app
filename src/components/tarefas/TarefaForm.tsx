@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useTarefasStore } from "@/stores/tarefasStore";
 import { precisaQuebra } from "@/lib/tarefas/microMetas";
-import { analisarEstimativa } from "@/lib/tarefas/formato";
+import { analisarEstimativa, dataInputParaISOMeioDia } from "@/lib/tarefas/formato";
 import { TarefaCamposForm } from "./TarefaCamposForm";
 import type { Pool, UnidadeEstimativa } from "@/types";
 
@@ -19,6 +19,9 @@ export function TarefaForm() {
   const [emergencial, setEmergencial] = useState(false);
   const [tagIds, setTagIds] = useState<string[]>([]);
   const [quebrarEmMicrometas, setQuebrarEmMicrometas] = useState(true);
+  const [rotina, setRotina] = useState(false);
+  const [diasSemana, setDiasSemana] = useState<number[]>([]);
+  const [repetirAte, setRepetirAte] = useState("");
 
   function fechar() {
     setAberto(false);
@@ -30,6 +33,9 @@ export function TarefaForm() {
     setEmergencial(false);
     setTagIds([]);
     setQuebrarEmMicrometas(true);
+    setRotina(false);
+    setDiasSemana([]);
+    setRepetirAte("");
   }
 
   function handleSubmit(e: React.FormEvent) {
@@ -48,6 +54,8 @@ export function TarefaForm() {
       quebrarEmMicrometas,
       emergencial,
       tagIds: tagIds.length > 0 ? tagIds : undefined,
+      diasSemana: rotina ? diasSemana : undefined,
+      repetirAte: rotina && repetirAte ? dataInputParaISOMeioDia(repetirAte) : undefined,
     });
     fechar();
   }
@@ -89,6 +97,12 @@ export function TarefaForm() {
         setEmergencial={setEmergencial}
         tagIds={tagIds}
         setTagIds={setTagIds}
+        rotina={rotina}
+        setRotina={setRotina}
+        diasSemana={diasSemana}
+        setDiasSemana={setDiasSemana}
+        repetirAte={repetirAte}
+        setRepetirAte={setRepetirAte}
         quebrarEmMicrometas={quebrarEmMicrometas}
         setQuebrarEmMicrometas={setQuebrarEmMicrometas}
         autoFocus

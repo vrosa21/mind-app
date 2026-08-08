@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import type { Task, Pool, UnidadeEstimativa } from "@/types";
 import { gerarMicroMetas, precisaQuebra } from "@/lib/tarefas/microMetas";
+import { feitoHoje } from "@/lib/tarefas/rotinas";
 import { STORAGE_KEYS } from "@/lib/storage/keys";
 import { zustandLocalStorage } from "@/lib/storage/zustandStorage";
 
@@ -15,6 +16,8 @@ interface NovaTarefaInput {
   quebrarEmMicrometas?: boolean;
   emergencial?: boolean;
   tagIds?: string[];
+  diasSemana?: number[];
+  repetirAte?: string;
 }
 
 type PatchTarefa = Partial<
@@ -27,6 +30,8 @@ type PatchTarefa = Partial<
     | "estimativaUnidade"
     | "emergencial"
     | "tagIds"
+    | "diasSemana"
+    | "repetirAte"
   >
 >;
 
@@ -40,6 +45,7 @@ interface TarefasState {
   editarMicroMeta: (tarefaId: string, microMetaId: string, titulo: string) => void;
   iniciarTarefa: (id: string) => void;
   concluirTarefa: (id: string) => void;
+  alternarFeitoHoje: (id: string) => void;
   editarConclusao: (id: string, concluidaEm: string) => void;
   editarPrevisaoTermino: (id: string, previsaoTerminoEm: string) => void;
   devolverAoPool: (id: string) => void;
@@ -60,6 +66,8 @@ export const useTarefasStore = create<TarefasState>()(
         quebrarEmMicrometas = true,
         emergencial = false,
         tagIds,
+        diasSemana,
+        repetirAte,
       }) => {
         const tarefa: Task = {
           id: crypto.randomUUID(),
@@ -76,6 +84,8 @@ export const useTarefasStore = create<TarefasState>()(
           criadaEm: new Date().toISOString(),
           emergencial,
           tagIds,
+          diasSemana: diasSemana && diasSemana.length > 0 ? diasSemana : undefined,
+          repetirAte,
         };
         set({ tarefas: [tarefa, ...get().tarefas] });
       },
@@ -205,6 +215,24 @@ export const useTarefasStore = create<TarefasState>()(
           ),
         });
       },
+      // Marcador leve da rotina, nunca o estado terminal `concluida` — reseta
+      // sozinho ao virar o dia (feitoHoje compara com a data atual).
+      alternarFeitoHoje: (id) => {
+        const agora = new Date();
+        set({
+          tarefas: get().tarefas.map((t) =>
+            t.id === id
+              ? {
+                  ...t,
+                  ultimaConclusao: feitoHoje(t, agora)
+                    ? undefined
+                    : agora.toISOString(),
+                }
+              : t,
+          ),
+        });
+      },
+
       editarConclusao: (id, concluidaEm) => {
         set({
           tarefas: get().tarefas.map((t) =>

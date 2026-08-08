@@ -1,5 +1,6 @@
 import { POOLS, POOL_LABELS } from "@/lib/tarefas/pools";
 import { useTagsStore } from "@/stores/tagsStore";
+import { DIAS_SELETOR } from "@/lib/tarefas/rotinas";
 import type { Pool, UnidadeEstimativa } from "@/types";
 
 interface TarefaCamposFormProps {
@@ -17,6 +18,12 @@ interface TarefaCamposFormProps {
   setEmergencial: (v: boolean) => void;
   tagIds: string[];
   setTagIds: (v: string[]) => void;
+  rotina: boolean;
+  setRotina: (v: boolean) => void;
+  diasSemana: number[];
+  setDiasSemana: (v: number[]) => void;
+  repetirAte: string;
+  setRepetirAte: (v: string) => void;
   // Ausentes = não exibe o controle (edição de tarefa existente; a flag só
   // se aplica na criação).
   quebrarEmMicrometas?: boolean;
@@ -39,11 +46,25 @@ export function TarefaCamposForm({
   setEmergencial,
   tagIds,
   setTagIds,
+  rotina,
+  setRotina,
+  diasSemana,
+  setDiasSemana,
+  repetirAte,
+  setRepetirAte,
   quebrarEmMicrometas,
   setQuebrarEmMicrometas,
   autoFocus,
 }: TarefaCamposFormProps) {
   const tags = useTagsStore((s) => s.tags);
+
+  function alternarDia(dia: number) {
+    setDiasSemana(
+      diasSemana.includes(dia)
+        ? diasSemana.filter((d) => d !== dia)
+        : [...diasSemana, dia],
+    );
+  }
 
   function alternarTag(id: string) {
     setTagIds(
@@ -135,6 +156,49 @@ export function TarefaCamposForm({
         />
         Emergencial
       </label>
+      <label className="flex items-center gap-2 text-sm opacity-80">
+        <input
+          type="checkbox"
+          checked={rotina}
+          onChange={(e) => setRotina(e.target.checked)}
+        />
+        Rotina?
+      </label>
+      {rotina && (
+        <div className="flex flex-col gap-2 rounded-lg border border-[var(--border)] p-3">
+          <div className="flex flex-wrap items-center gap-1">
+            {DIAS_SELETOR.map((d) => {
+              const selecionado = diasSemana.includes(d.valor);
+              return (
+                <button
+                  key={d.valor}
+                  type="button"
+                  title={d.nome}
+                  aria-label={d.nome}
+                  aria-pressed={selecionado}
+                  onClick={() => alternarDia(d.valor)}
+                  className={
+                    selecionado
+                      ? "h-8 w-8 rounded-full bg-[var(--accent)] text-xs font-medium text-[var(--accent-foreground)]"
+                      : "h-8 w-8 rounded-full border border-[var(--border)] text-xs opacity-70 hover:opacity-100"
+                  }
+                >
+                  {d.label}
+                </button>
+              );
+            })}
+          </div>
+          <label className="flex items-center gap-2 text-sm opacity-80">
+            Repetir até (opcional)
+            <input
+              type="date"
+              value={repetirAte}
+              onChange={(e) => setRepetirAte(e.target.value)}
+              className="rounded-lg border border-[var(--border)] bg-transparent px-2 py-1 text-sm outline-none focus:border-[var(--accent)]"
+            />
+          </label>
+        </div>
+      )}
     </>
   );
 }
