@@ -2,7 +2,7 @@
 
 > **Propósito deste documento:** retomar o desenvolvimento do app Mind numa conversa nova, sem re-explicar tudo. Cole este arquivo (ou suba-o como arquivo do projeto) no início da próxima conversa. Contém: contexto, ambiente técnico, decisões travadas, status de cada lote, o que falta AGORA, plano de deploy, a ideia futura do calendário (já avaliada) e como retomar desde a abertura do PowerShell.
 >
-> **Estado em uma frase:** os **21 itens de melhoria estão implementados** (Lotes A→E). Os Lotes A, G, F, B, C, D estão **mesclados no `master` local**; o **Lote E está commitado no branch `lote-e`, mas ainda NÃO mesclado**. Falta: (1) a segunda metade da regressão do /progresso, (2) o merge do Lote E, (3) o **deploy único** na Vercel. Tudo segurando o push até o fim. Depois, há uma **nova ideia (calendário — "Fase 8")** já avaliada, a construir em fases.
+> **Estado em uma frase:** os **21 itens de melhoria estão implementados e mesclados** (Lotes A→E, todos no `master`, incluindo o Lote E em `a9fedb8`) e **publicados** — o deploy único já ocorreu e foi validado no celular. A **Fase 8 (calendário)** está em curso: a **8a (mensal com contadores por dia)** é a fatia em desenvolvimento no branch `lote-8a`.
 
 ---
 
@@ -82,10 +82,9 @@ Ordem executada: **A → G → F → B → C → D → E**.
 | **B** | Opções e flags na criação | 1, 7, 16+13, 19 | `664369c` | ✅ Mesclado e validado |
 | **C** | Tags editáveis + cores de status | 10, 21 | `32271dc` | ✅ Mesclado e validado |
 | **D** | Sinais sonoros no timer | 11 | `befe64d` | ✅ Mesclado e validado |
-| **E** | Rotinas + agenda de hoje | 3, 8 | `a9fedb8` | 🟡 **Commitado no `lote-e`, NÃO mesclado** |
+| **E** | Rotinas + agenda de hoje | 3, 8 | `a9fedb8` | ✅ Mesclado e validado |
 
-**Cadeia de commits no `master`:** `e047ced` (pré-melhorias, é o que está NO AR hoje) → `b03f254` (A) → `3360108` (G) → `c5f56a9` (F) → `664369c` (B) → `32271dc` (C) → `befe64d` (D, HEAD atual do `master`).
-**Fora do `master`:** `a9fedb8` (E) vive no branch `lote-e`, aguardando merge.
+**Cadeia de commits no `master`:** `e047ced` (pré-melhorias) → `b03f254` (A) → `3360108` (G) → `c5f56a9` (F) → `664369c` (B) → `32271dc` (C) → `befe64d` (D) → `a9fedb8` (E, HEAD do `master` na publicação). Todos os 7 lotes foram ao ar juntos no deploy único (§7, agora histórico).
 
 ### Resumo do que cada lote entregou
 
@@ -101,7 +100,7 @@ Ordem executada: **A → G → F → B → C → D → E**.
 
 **Lote D (`befe64d`)** — som aos 50% (novo) além do som do fim (que já existia); detecção movida pra dentro do tick; `chime.ts` com variante "metade" (660 Hz, ~60% volume, sem vibração); reusa `Config.intensidadeNotificacao` (silencioso=off). Mecanismo de flag persistida (`metadeSinalizada`) testado contra disparo retroativo (sair/voltar) e escuta manual do áudio — ambos OK.
 
-**Lote E (`a9fedb8`, NÃO mesclado)** — rotinas semanais + agenda de hoje:
+**Lote E (`a9fedb8`, mesclado)** — rotinas semanais + agenda de hoje:
 - Campos novos em `Task`: `diasSemana?`, `repetirAte?`, `ultimaConclusao?` (todos opcionais).
 - Novo `src/lib/tarefas/rotinas.ts` centraliza `ehRotina`, `rotinaAtivaEm`, `dentroDoRepetirAte` (inclui o próprio dia), `feitoHoje`.
 - Marcador "Rotina?" no formulário (revelação progressiva), revelando seletor S/T/Q/Q/S/S/D e "Repetir até".
@@ -109,7 +108,7 @@ Ordem executada: **A → G → F → B → C → D → E**.
 - Novo `AgendaHoje.tsx` acima da lista: rotinas ativas hoje (não feitas) + tarefas com previsão B3 de hoje; vazio = "Nada previsto para hoje."
 - `/progresso` filtra `!ehRotina` das agregações de **contagem de tarefas** (não dos minutos focados).
 - Bug corrigido ao vivo: agenda não excluía rotinas já marcadas "feito hoje" — corrigido antes do commit.
-- **Testado só um lado da regressão** (rotina NÃO entra nas contagens — "Tarefas criadas" ficou 0 mesmo com rotina de hoje). **Falta o outro lado** (ver §7).
+- **Regressão testada dos dois lados** (ver §7, agora histórico): rotina NÃO entra nas contagens — "Tarefas criadas" ficou 0 mesmo com rotina de hoje — **e** tarefa comum continuou entrando normalmente (contadores subiram ao criar/concluir). O filtro `!ehRotina` provou-se cirúrgico.
 
 ---
 
@@ -117,40 +116,57 @@ Ordem executada: **A → G → F → B → C → D → E**.
 
 - **G0 (inspeção) antes de codar:** uma spec descreve o que o autor *imagina* que existe; o G0 verifica o que *de fato* existe. Salvou o projeto várias vezes (tags e humor não existiam como imaginado; no Lote E refinou "rotina fora dos analytics" para "fora só das contagens de tarefas; minutos focados contam").
 - **"Última milha" de teste manual:** testes automatizados (Playwright) provam a *lógica*, mas não tudo. Fechar sempre com verificação humana: cliques reais, escuta de áudio (Lote D), e bugs pegos ao vivo (Lote E: agenda não excluía "feito hoje").
-- **Regressão sempre dos DOIS lados:** ao filtrar dados, testar que o filtro (a) inclui o que deve e (b) NÃO exclui demais. É a pendência atual do Lote E.
+- **Regressão sempre dos DOIS lados:** ao filtrar dados, testar que o filtro (a) inclui o que deve e (b) NÃO exclui demais. Foi assim que o Lote E fechou (§5).
 - **Bug do editor de data apareceu 3x** (G, B, retroativamente no A). Oportunidade anotada (sua escolha): extrair um componente único de editor de data.
 - **Consistência entre lotes paga dividendos:** `duracaoPlanejadaMin` (B) tornou os 50% do Lote D triviais; `estados.ts` (F) virou fonte única de cor e ordem; `rotinas.ts` (E) centralizou recorrência.
+- **Dívida — três grades mensais (Fase 8a).** Existem três implementações da mesma
+  grade 7 colunas: `CalendarioMensal.tsx` (/progresso, Lote F), `CalendarioHumorMensal.tsx`
+  (/humor) e o `/calendario` da Fase 8a. **`src/lib/calendario/grade.ts` é a fonte
+  canônica** — módulo puro (dias do mês + offset inicial, ancorados ao meio-dia local),
+  criado na 8a e consumido só por ela. A migração dos dois calendários antigos para o
+  helper fica para um **lote futuro**, deliberadamente: primeiro a 8a prova o helper em
+  uso real, depois se refatora o que já funciona — migrar junto com a estreia teria
+  colocado /progresso e /humor em risco de regressão dentro do lote mais barato da fase.
+  Duas divergências de borda pré-existentes, mapeadas mas **não** tocadas na 8a: (a)
+  `tarefasConcluidasPorDiaDoMes` e `tarefasConcluidasPorDia` (`src/lib/progresso/agregacao.ts`)
+  não checam `estado === "concluida"`, ao contrário de `tarefasConcluidasPorPeriodo` e
+  `tarefasConcluidasNoDia` — uma tarefa concluída e depois devolvida ao pool ainda conta
+  no heatmap e no gráfico de 7 dias, mas não nos cards de período nem no `/calendario`
+  novo; (b) `RegistroHumorDia.tsx` (linha ~84) tem uma cópia privada de
+  `dataInputParaISOMeioDia` (a versão pública está em `src/lib/tarefas/formato.ts`).
 
 ---
 
-## 7. O que falta AGORA (retomar por aqui) — 3 passos
+## 7. Os 3 passos do deploy único — histórico (concluído)
 
-### Passo 1 — Fechar a regressão do /progresso (a metade que faltou)
-No Lote E testamos que **rotina NÃO entra** nas contagens. Falta provar o **outro lado — que tarefa comum AINDA entra** (garantir que o filtro `!ehRotina` não pegou demais). Com `npm run dev` rodando:
-1. Em `/progresso`, **anote** "tarefas criadas/concluídas" nos últimos 7 dias.
-2. Crie uma **tarefa comum** (sem "Rotina?") e conclua.
-3. Confirme que os contadores **subiram** (tarefa comum entra normalmente).
-4. (Já provado: criar/marcar rotina não mexe nos números.)
+Esta seção documentava os passos pendentes antes do primeiro deploy dos 21 itens.
+**Os três estão concluídos** e ficam aqui só como registro do que foi feito, na ordem
+em que aconteceu:
 
-Se subir, o filtro está cirúrgico e a regressão fecha dos dois lados.
+### Passo 1 — Fechar a regressão do /progresso — ✅ concluído
+No Lote E já estava provado que **rotina NÃO entra** nas contagens. Faltava o outro
+lado: confirmar que **tarefa comum AINDA entra** (o filtro `!ehRotina` não excluiu
+demais). Testado em `/progresso`: criar e concluir uma tarefa comum fez os contadores
+de 7 dias **subirem** normalmente. Regressão fechada dos dois lados (ver §5 e §6).
 
-### Passo 2 — Mesclar o Lote E (sem push)
-Passando o Passo 1, no PowerShell:
+### Passo 2 — Mesclar o Lote E — ✅ concluído
 ```powershell
-git status                 # confirmar: On branch lote-e
 git checkout master
-git merge lote-e           # deve ser fast-forward -> master em a9fedb8
+git merge lote-e           # fast-forward -> master em a9fedb8
 git branch -d lote-e
-git status                 # confirmar: ahead of 'origin/master' by 7 commits
 ```
-Isso deixa **7 lotes** (A→E) empilhados no `master`, todos ainda sem push.
+Os 7 lotes (A→E) ficaram empilhados no `master` em `a9fedb8`.
 
-### Passo 3 — DEPLOY ÚNICO (o grande momento)
-Os 7 lotes vão ao ar de uma vez, sobre os dados reais do celular (que hoje roda `e047ced`, pré-melhorias).
-1. **Antes:** garantir que tudo foi testado (é o único ponto de segurança — não há teste no celular antes do push).
-2. `git push` (no PowerShell) → dispara o deploy automático na Vercel.
-3. Acompanhar na aba **Deployments** da Vercel até ficar **Ready**.
-4. **Validar no celular (smoke-test), dois pontos:** (a) as melhorias apareceram; (b) as tarefas antigas continuam **intactas**. Esse teste pesa porque 7 lotes vão ao ar juntos — todos foram desenhados retrocompatíveis com o localStorage existente, mas confirmar no aparelho é a prova final.
+### Passo 3 — DEPLOY ÚNICO — ✅ concluído
+Os 7 lotes foram ao ar de uma vez, sobre os dados reais do celular (que rodava
+`e047ced`, pré-melhorias). `git push` disparou o deploy automático na Vercel; a
+publicação ficou **Ready**. Smoke-test no celular validou os dois pontos que
+importavam: (a) as melhorias apareceram; (b) as tarefas antigas continuaram
+**intactas** — confirmando a retrocompatibilidade com que os 7 lotes foram desenhados.
+
+**Estado atual:** `master` publicado em `a9fedb8`, sincronizado com `origin/master`.
+A Fase 8 (calendário, §8) está em curso — ver `lote-8a` para o desenvolvimento
+corrente.
 
 ---
 
@@ -169,13 +185,21 @@ O usuário quer uma **aba de calendário** (estilo Google Calendar), com visões
   - **8c (maior):** visões **dia/semana com faixas de horário** (o cara a cara com o Google Calendar).
 - **Detalhe técnico (decidir no lote certo):** visão mensal é fácil à mão (grade 7 colunas, heatmap já existe). Semana/dia com horário é onde uma lib (ex.: `react-big-calendar`) economizaria — mas ela briga com as paletas sensoriais e o não-punitivo. Provável: **mês à mão; decidir lib-vs-mão só para semana/dia.**
 
-**Importante:** só começar a Fase 8 **depois** de fechar os 3 passos da §7 (regressão + merge + deploy). Não abrir nova frente com um lote pronto e não publicado.
+**Importante (histórico):** a regra era só começar a Fase 8 depois de fechar os 3 passos
+da §7 (regressão + merge + deploy) — para não abrir uma nova frente com um lote pronto e
+não publicado. **Os 3 passos estão concluídos** (§7): o deploy único já ocorreu e foi
+validado no celular. A Fase 8 **está liberada e em curso** — a 8a (calendário mensal com
+contadores por dia) é a fatia em desenvolvimento agora, no branch `lote-8a`. Ver também a
+dívida técnica registrada em §6 sobre as três implementações de grade mensal que a 8a
+introduziu.
 
 ---
 
 ## 9. Como retomar desde o PowerShell
 
-**Localizar-se primeiro** (não assumir o branch). O estado exato depende de onde parou.
+**Localizar-se primeiro.** O estado descrito abaixo é o de referência (pós-deploy,
+Fase 8 em curso); confirme com `git log`/`git branch` antes de assumir que nada mudou
+desde a última sessão.
 
 ### Parte 1 — Reabrir e localizar
 1. Abra o **PowerShell**.
@@ -187,12 +211,16 @@ O usuário quer uma **aba de calendário** (estilo Google Calendar), com visões
    git log --oneline -8
    ```
 
-### Parte 2 — Interpretar (o `git log`/`git branch` diz tudo)
-Marcadores-chave: `befe64d` = Lote D (topo esperado do `master`); `a9fedb8` = Lote E (no branch `lote-e`).
+### Parte 2 — Interpretar
+Marcador-chave: `a9fedb8` = Lote E, topo do `master` desde o deploy único (§7). O
+branch `lote-e` não existe mais (apagado após o merge).
 
-- **Se existe o branch `lote-e` e o `master` está em `befe64d`** (cenário esperado) → o Lote E está commitado mas **não mesclado**. Faça a §7 na ordem: Passo 1 (regressão), Passo 2 (merge), Passo 3 (deploy).
-- **Se o topo do `master` já é `a9fedb8`** → o Lote E **já foi mesclado**. Falta só o Passo 3 (deploy), se ainda não foi feito. Cheque se já houve `git push` (o `git status` diria "up to date with 'origin/master'" em vez de "ahead by N commits").
-- **Se `git status` mostra "up to date with 'origin/master'" com `a9fedb8`** → o **deploy já aconteceu**. Valide no celular e siga para a Fase 8 (§8).
+- **`master` em `a9fedb8`, "up to date with 'origin/master'"** → cenário de referência:
+  os 21 itens estão publicados. Se houver um branch `lote-X` ativo (ex.: `lote-8a`), é
+  a Fase 8 em desenvolvimento — retome por ali.
+- **Algo diferente disso** (branch `lote-e` ainda existindo, `master` atrás de
+  `a9fedb8`, etc.) → o repositório está num estado anterior ao registrado aqui;
+  trate como desatualização deste documento antes de seguir, não como o esperado.
 
 ### Parte 3 — Testar/rodar (quando aplicável)
 - Para a regressão do /progresso e testes de UI: segunda janela do PowerShell → `cd` na pasta → `npm run dev` → `localhost:3000`.
