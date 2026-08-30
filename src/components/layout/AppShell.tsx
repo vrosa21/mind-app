@@ -7,6 +7,7 @@ import { bloquear } from "@/lib/auth/sessao";
 const LINKS = [
   { href: "/", label: "Início" },
   { href: "/tarefas", label: "Tarefas" },
+  { href: "/calendario", label: "Calendário" },
   { href: "/progresso", label: "Progresso" },
   { href: "/humor", label: "Humor" },
   { href: "/config", label: "Config" },
@@ -19,9 +20,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-full flex-col">
       <header className="border-b border-[var(--border)]">
-        <nav className="mx-auto flex max-w-3xl items-center justify-between px-6 py-4">
+        <nav className="mx-auto flex max-w-3xl flex-wrap items-center justify-between gap-y-2 px-6 py-4">
           <span className="text-lg font-semibold">Mind</span>
-          <div className="flex items-center gap-4 text-sm">
+          <div className="flex flex-wrap items-center gap-4 text-sm">
             {LINKS.map((link) => (
               <Link
                 key={link.href}
